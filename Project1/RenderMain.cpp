@@ -1,55 +1,69 @@
-#include <iostream>
+#include "Core/Utility.h"
+
 #include "Core/ColorUtility.h"
-#include "Core/Ray.h"
+#include "Core/HittableList.h"
+#include "Core/Sphere.h"
+#include "Core/Camera.h"
 
-using namespace std;
+#include <iostream>
 
-bool hit_sphere(const point3& center, double radius, const ray& r) {
-	vec3 oc = r.origin() - center;
-	auto a = r.direction().length_squared();
-	auto half_b = dot(oc, r.direction());
-	auto c = oc.length_squared() - radius * radius;
-	auto discriminant = half_b * half_b - a * c;
+color ray_color(const ray& r, const hittable& world, int depth) {
+    hit_record rec;
 
-	if (discriminant < 0) {
-		return -1.0;
-	}
-	else {
-		return (-half_b - sqrt(discriminant)) / a;
-	}
-}
+    // If we've exceeded the ray bounce limit, no more light is gathered.
+    if (depth <= 0)
+        return color(0, 0, 0);
 
-color ray_color(const ray& r) {
-	auto t = hit_sphere(point3(0, 0, -1), 0.5, r);
-	if (t > 0.0) {
-		vec3 N = unit_vector(r.at(t) - vec3(0, 0, -1));
-		return 0.5 * color(N.x() + 1, N.y() + 1, N.z() + 1);
-	}
-	vec3 unit_direction = unit_vector(r.direction());
-	t = 0.5 * (unit_direction.y() + 1.0);
-	return (1.0 - t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
+    if (world.hit(r, 0.001, infinity, rec)) {
+        point3 target = rec.p + rec.normal + random_unit_vector();
+        return 0.5 * ray_color(ray(rec.p, target - rec.p), world, depth - 1);
+    }
+
+    vec3 unit_direction = unit_vector(r.direction());
+    auto t = 0.5 * (unit_direction.y() + 1.0);
+    return (1.0 - t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
 }
 
 int main()
 {
 #pragma region PPM Image
-	const int image_width = 256;
-	const int image_height = 256;
+    // Image
+    const auto aspect_ratio = 16.0 / 9.0;
+    const int image_width = 400;
+    const int image_height = static_cast<int>(image_width / aspect_ratio);
+    const int samples_per_pixel = 100;
+    const int max_depth = 50;
 
-	/*cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+    // World
+    hittable_list world;
+    world.add(make_shared<sphere>(point3(0, 0, -1), 0.5));
+    world.add(make_shared<sphere>(point3(0, -100.5, -1), 100));
 
-	for (int j = image_height - 1; j >= 0; --j) {
-		std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
-		for (int i = 0; i < image_width; ++i) {
-			color pixel_color(double(i) / (image_width - 1), double(j) / (image_height - 1), 0.25);
-			write_color(std::cout, pixel_color);
-		}
-	}*/
+    // Camera
+    camera cam;
 
-	cout << "Hello world";
+    // Render
+
+    std::cout << "P3\n" << image_width << " " << image_height << "\n255\n";
+
+    for (int j = image_height - 1; j >= 0; --j) {
+        //std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
+        for (int i = 0; i < image_width; ++i) {
+            color pixel_color(0, 0, 0);
+            for (int s = 0; s < samples_per_pixel; ++s) {
+                auto u = (i + random_double()) / (image_width - 1);
+                auto v = (j + random_double()) / (image_height - 1);
+                ray r = cam.get_ray(u, v);
+                pixel_color += ray_color(r, world, max_depth);
+            }
+            write_color(std::cout, pixel_color, samples_per_pixel);
+        }
+    }
+
+    //std::cerr << "\nDone.\n";
 
 #pragma endregion PPM Image
 
-	system("pause");
+	//system("pause");
 	return 0;
 }

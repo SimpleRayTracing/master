@@ -1,0 +1,4 @@
+﻿  RenderMain.cpp
+D:\GitProjects\RayTracing\Project1\RenderMain.cpp(15,14): warning C4305: “return”: 从“double”到“bool”截断
+D:\GitProjects\RayTracing\Project1\RenderMain.cpp(24,6): warning C4804: “>”: 在操作中使用类型“bool”不安全
+  Project1.vcxproj -> D:\GitProjects\RayTracing\x64\Debug\Project1.exe

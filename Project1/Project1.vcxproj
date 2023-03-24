@@ -142,8 +142,13 @@
     <ClCompile Include="RenderMain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Core\Camera.h" />
     <ClInclude Include="Core\ColorUtility.h" />
+    <ClInclude Include="Core\Hittable.h" />
+    <ClInclude Include="Core\HittableList.h" />
     <ClInclude Include="Core\Ray.h" />
+    <ClInclude Include="Core\Sphere.h" />
+    <ClInclude Include="Core\Utility.h" />
     <ClInclude Include="Core\Vec3.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
